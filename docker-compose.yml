@@ -9,7 +9,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
-      - DB_PASSWORD=yrZ1YsmxQrUag1lT
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=worldcup2026
     depends_on:
       - db
@@ -18,7 +18,7 @@ services:
     image: postgres:15
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=yrZ1YsmxQrUag1lT
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=worldcup2026
     volumes:
       - pgdata:/var/lib/postgresql/data
