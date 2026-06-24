@@ -1,0 +1,31 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "worldcup.fullname" . }}
+  labels:
+    {{- include "worldcup.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "worldcup.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Trafic HTTP entrant depuis l'Ingress controller (Traefik) uniquement
+    - ports:
+        - port: 3000
+          protocol: TCP
+  egress:
+    # Vers PostgreSQL
+    - ports:
+        - port: 5432
+          protocol: TCP
+    # Vers le DNS cluster
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+{{- end }}

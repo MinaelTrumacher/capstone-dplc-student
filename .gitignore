@@ -26,3 +26,15 @@ coverage/
 # Temporary files
 tmp/
 *.tmp
+
+# Kubernetes secrets (ne jamais committer)
+deploy/helm/worldcup/secret.yaml
+**/secrets.yaml
+kubeconfig
+*.kubeconfig
+
+# Helm charts téléchargés
+deploy/helm/worldcup/charts/
+
+# Chart.lock
+deploy/helm/worldcup/Chart.lock
