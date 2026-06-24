@@ -1,0 +1,48 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "worldcup.fullname" . }}
+  labels:
+    {{- include "worldcup.labels" . | nindent 4 }}
+    release: worldcup
+    app: kube-prometheus-stack
+spec:
+  groups:
+    - name: worldcup.app
+      rules:
+        # Alerte : aucun pod disponible depuis 1 minute
+        - alert: WorldCupAppDown
+          expr: |
+            absent(up{job="{{ include "worldcup.fullname" . }}"} == 1)
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "WorldCup app is down"
+            description: "Aucun pod de l'application worldcup ne répond depuis 1 minute."
+
+        # Alerte : CPU moyen > 80% pendant 2 minutes (HPA devrait avoir scalé, mais au cas où)
+        - alert: WorldCupHighCPU
+          expr: |
+            avg(rate(process_cpu_seconds_total{job="{{ include "worldcup.fullname" . }}"}[2m])) * 100 > 80
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CPU élevé sur WorldCup app"
+            description: "CPU moyen > 80% depuis 2 minutes. Vérifier le HPA."
+
+        # Alerte : taux d'erreur HTTP 5xx > 5%
+        - alert: WorldCupHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job="{{ include "worldcup.fullname" . }}", status_code=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="{{ include "worldcup.fullname" . }}"}[5m])) > 0.05
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Taux d'erreur HTTP élevé"
+            description: "Plus de 5% des requêtes retournent une erreur 5xx."
+{{- end }}

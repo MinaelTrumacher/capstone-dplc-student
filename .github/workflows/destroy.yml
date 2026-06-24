@@ -1,0 +1,30 @@
+name: Destroy (uninstall)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Taper 'DESTROY' pour confirmer la suppression"
+        required: true
+
+jobs:
+  destroy:
+    name: Helm uninstall + namespace cleanup
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'DESTROY'
+    environment: production
+
+    steps:
+      - name: Configure kubectl
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Helm uninstall
+        run: |
+          helm uninstall worldcup -n worldcup || true
+
+      - name: Delete namespace
+        run: |
+          kubectl delete namespace worldcup --ignore-not-found=true
