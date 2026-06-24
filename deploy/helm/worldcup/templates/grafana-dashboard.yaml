@@ -23,7 +23,7 @@ data:
           "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
           "targets": [{
             "expr": "sum(rate(http_requests_total[1m])) by (status_code)",
-            "legendFormat": "HTTP {{status_code}}"
+            "legendFormat": "HTTP {{ "{{" }}status_code}}"
           }]
         },
         {
@@ -34,15 +34,15 @@ data:
           "targets": [
             {
               "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route)) * 1000",
-              "legendFormat": "p50 {{route}}"
+              "legendFormat": "p50 {{ "{{" }}route}}"
             },
             {
               "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route)) * 1000",
-              "legendFormat": "p95 {{route}}"
+              "legendFormat": "p95 {{ "{{" }}route}}"
             },
             {
               "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route)) * 1000",
-              "legendFormat": "p99 {{route}}"
+              "legendFormat": "p99 {{ "{{" }}route}}"
             }
           ]
         },
@@ -53,7 +53,7 @@ data:
           "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
           "targets": [{
             "expr": "rate(process_cpu_seconds_total[1m]) * 100",
-            "legendFormat": "CPU pod {{instance}}"
+            "legendFormat": "CPU pod {{ "{{" }}instance}}"
           }]
         },
         {
@@ -83,7 +83,7 @@ data:
           "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
           "targets": [{
             "expr": "process_resident_memory_bytes / 1024 / 1024",
-            "legendFormat": "RSS MB {{instance}}"
+            "legendFormat": "RSS MB {{ "{{" }}instance}}"
           }]
         },
         {
