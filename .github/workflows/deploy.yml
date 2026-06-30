@@ -110,7 +110,7 @@ jobs:
   # ─── Job 3 : Déploiement en production (push sur main seulement) ──────────
   deploy:
     name: Deploy to production (k3s)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [build, helm-lint]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production

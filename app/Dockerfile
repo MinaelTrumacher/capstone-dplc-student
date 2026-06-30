@@ -19,6 +19,7 @@ COPY --from=deps /app/node_modules ./node_modules
 
 # Copier le code source (invalidé seulement si le code change, pas les deps)
 COPY main.js ./
+COPY job-standings.js ./
 COPY public ./public
 
 # Utilisateur non-root pour limiter la surface d'attaque
