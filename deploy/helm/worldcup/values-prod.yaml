@@ -6,7 +6,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 image:
-  repository: ghcr.io/OWNER/worldcup-app
+  repository: ghcr.io/minaeltrumacher/worldcup-app
   tag: "v1.0.0"          # tag versionné, jamais "latest" en prod
   pullPolicy: Always
 

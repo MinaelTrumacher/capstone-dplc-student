@@ -5,7 +5,7 @@
 
 # ── Image de l'application ────────────────────────────────────────────────────
 image:
-  repository: ghcr.io/OWNER/worldcup-app
+  repository: ghcr.io/minaeltrumacher/worldcup-app
   tag: "latest"
   pullPolicy: IfNotPresent
 
@@ -38,7 +38,7 @@ service:
 ingress:
   enabled: true
   className: traefik
-  host: worldcup.example.com
+  host: capstone.nathan-oger.fr
   tls:
     enabled: false          # passer à true en prod avec cert-manager
     secretName: worldcup-tls
@@ -80,12 +80,18 @@ dbSecret:
 # ── PostgreSQL (Bitnami chart) ────────────────────────────────────────────────
 postgresql:
   enabled: true
+  # Bitnami a retiré son catalogue gratuit de docker.io/bitnami en 2025.
+  # Les anciens tags sont désormais sous docker.io/bitnamilegacy.
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
   auth:
     username: "worldcup"
     database: "worldcup2026"
     existingSecret: "worldcup-db-secret"
     secretKeys:
       userPasswordKey: "db-password"
+      adminPasswordKey: "db-password"   # superuser "postgres" : réutilise la même clé du secret
   primary:
     persistence:
       enabled: true
