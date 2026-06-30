@@ -1,0 +1,101 @@
+{{- if and .Values.monitoring.enabled .Values.grafana.dashboards.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "worldcup.fullname" . }}-dashboard
+  labels:
+    {{- include "worldcup.labels" . | nindent 4 }}
+    # Label lu par le sidecar Grafana pour importer le dashboard automatiquement
+    grafana_dashboard: "1"
+data:
+  worldcup-dashboard.json: |
+    {
+      "title": "WorldCup 2026 — Application",
+      "uid": "worldcup-app",
+      "schemaVersion": 38,
+      "refresh": "10s",
+      "time": { "from": "now-30m", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Requêtes / seconde",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(http_requests_total[1m])) by (status_code)",
+            "legendFormat": "HTTP {{ "{{" }}status_code}}"
+          }]
+        },
+        {
+          "id": 2,
+          "title": "Latence p50 / p95 / p99 (ms)",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route)) * 1000",
+              "legendFormat": "p50 {{ "{{" }}route}}"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route)) * 1000",
+              "legendFormat": "p95 {{ "{{" }}route}}"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route)) * 1000",
+              "legendFormat": "p99 {{ "{{" }}route}}"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "CPU utilisé (%) par pod",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+            "legendFormat": "CPU pod {{ "{{" }}instance}}"
+          }]
+        },
+        {
+          "id": 4,
+          "title": "Nombre de réplicas (HPA)",
+          "type": "stat",
+          "gridPos": { "x": 12, "y": 8, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~\".*worldcup.*\"}",
+            "legendFormat": "réplicas actuels"
+          }]
+        },
+        {
+          "id": 5,
+          "title": "Votes totaux",
+          "type": "stat",
+          "gridPos": { "x": 18, "y": 8, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "sum(increase(http_requests_total{status_code=\"201\"}[24h]))",
+            "legendFormat": "votes 24h"
+          }]
+        },
+        {
+          "id": 6,
+          "title": "Mémoire RSS (MB) par pod",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "RSS MB {{ "{{" }}instance}}"
+          }]
+        },
+        {
+          "id": 7,
+          "title": "Taux d'erreurs 5xx",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m])) * 100",
+            "legendFormat": "% erreurs 5xx"
+          }]
+        }
+      ]
+    }
+{{- end }}

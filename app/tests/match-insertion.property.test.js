@@ -48,8 +48,8 @@ describe('Feature: capstone-cloud-resilience, Property 1: Round-trip d\'insertio
           date: fc.date({
             min: new Date('2000-01-01'),
             max: new Date('2099-12-31'),
-          }),
-        }),
+          }).filter(d => !isNaN(d.getTime())),
+        }).filter(data => data.team_home.trim() !== data.team_away.trim()),
         async (matchData) => {
           const dateStr = matchData.date.toISOString().split('T')[0];
           let capturedInsertParams = null;

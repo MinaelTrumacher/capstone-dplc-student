@@ -1,0 +1,139 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# values.yaml — Configuration par défaut (développement / CI)
+# Surcharger avec values-prod.yaml en production
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Image de l'application ────────────────────────────────────────────────────
+image:
+  repository: ghcr.io/minaeltrumacher/worldcup-app
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# ── Réplicas & stratégie ──────────────────────────────────────────────────────
+replicaCount: 2
+
+# ── Ressources (requests = HPA base, limits = garde-fou) ─────────────────────
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+# ── HPA ───────────────────────────────────────────────────────────────────────
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 60
+
+# ── Service ───────────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+# ── Ingress ───────────────────────────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: traefik
+  host: capstone.nathan-oger.fr
+  tls:
+    enabled: false          # passer à true en prod avec cert-manager
+    secretName: worldcup-tls
+
+# ── Probes (calibrées pour redémarrage < 15 s) ───────────────────────────────
+probes:
+  startup:
+    initialDelaySeconds: 5
+    periodSeconds: 3
+    failureThreshold: 10    # 5+3*10 = 35s max avant de décider que ça plante
+    path: /api/health/db
+  liveness:
+    initialDelaySeconds: 0
+    periodSeconds: 5
+    failureThreshold: 3     # 15s avant redémarrage (objectif self-healing < 15s)
+    path: /
+  readiness:
+    initialDelaySeconds: 0
+    periodSeconds: 3
+    failureThreshold: 3
+    path: /api/health/db
+
+# ── Variables d'environnement non sensibles ───────────────────────────────────
+config:
+  DB_HOST: "worldcup-postgresql"
+  DB_PORT: "5432"
+  DB_NAME: "worldcup2026"
+
+# ── Credentials DB (référencées depuis un Secret) ────────────────────────────
+# Les valeurs réelles sont dans un Secret K8s, jamais ici en clair.
+# Le secret est créé via : helm install --set dbSecret.password=...
+# ou via un secret K8s pré-existant (externalSecret.enabled=true)
+dbSecret:
+  name: "worldcup-db-secret"   # nom du Secret K8s à créer ou à utiliser
+  create: true                  # false si le secret est géré externellement
+  username: "worldcup"
+  # password: ""  # NE PAS METTRE ICI — passer via --set ou secret externe
+
+# ── PostgreSQL (Bitnami chart) ────────────────────────────────────────────────
+postgresql:
+  enabled: true
+  # Bitnami a retiré son catalogue gratuit de docker.io/bitnami en 2025.
+  # Les anciens tags sont désormais sous docker.io/bitnamilegacy.
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+  auth:
+    username: "worldcup"
+    database: "worldcup2026"
+    existingSecret: "worldcup-db-secret"
+    secretKeys:
+      userPasswordKey: "db-password"
+      adminPasswordKey: "db-password"   # superuser "postgres" : réutilise la même clé du secret
+  primary:
+    persistence:
+      enabled: true
+      size: 2Gi
+    initdb:
+      scriptsConfigMap: "worldcup-initdb"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# ── PodDisruptionBudget ───────────────────────────────────────────────────────
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# ── SecurityContext ───────────────────────────────────────────────────────────
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: false   # Express.js écrit dans /tmp pour certains middlewares
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# ── NetworkPolicy ─────────────────────────────────────────────────────────────
+networkPolicy:
+  enabled: true
+
+# ── Observabilité ─────────────────────────────────────────────────────────────
+monitoring:
+  enabled: false   # activer en prod (installe kube-prometheus-stack)
+  serviceMonitor:
+    enabled: true
+    interval: "15s"
+    path: /metrics
+
+# ── Grafana dashboard ─────────────────────────────────────────────────────────
+grafana:
+  dashboards:
+    enabled: true

@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "worldcup.fullname" . }}-standings
+  labels:
+    {{- include "worldcup.labels" . | nindent 4 }}
+spec:
+  # Toutes les 15 minutes : recalcule le classement et l'écrit en base
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid        # évite deux jobs simultanés
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "worldcup.selectorLabels" . | nindent 12 }}
+            job: standings-updater
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+          containers:
+            - name: standings-updater
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["node", "job-standings.js"]
+              envFrom:
+                - configMapRef:
+                    name: {{ include "worldcup.fullname" . }}-config
+              env:
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.dbSecret.name }}
+                      key: db-username
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.dbSecret.name }}
+                      key: db-password
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "64Mi"
+                limits:
+                  cpu: "200m"
+                  memory: "128Mi"

@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# values-prod.yaml — Surcharges de production
+# Usage : helm upgrade worldcup ./deploy/helm/worldcup \
+#           -f values.yaml -f values-prod.yaml \
+#           --set dbSecret.password=$DB_PASSWORD
+# ─────────────────────────────────────────────────────────────────────────────
+
+image:
+  repository: ghcr.io/minaeltrumacher/worldcup-app
+  tag: "v1.0.0"          # tag versionné, jamais "latest" en prod
+  pullPolicy: Always
+
+replicaCount: 2
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "1000m"
+    memory: "512Mi"
+
+ingress:
+  host: worldcup.mondomaine.fr   # à remplacer par ton domaine réel
+  tls:
+    enabled: true
+    secretName: worldcup-tls    # géré par cert-manager
+
+monitoring:
+  enabled: true
+
+postgresql:
+  primary:
+    persistence:
+      size: 10Gi

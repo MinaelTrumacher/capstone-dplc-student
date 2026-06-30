@@ -1,0 +1,19 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "worldcup.fullname" . }}
+  labels:
+    {{- include "worldcup.labels" . | nindent 4 }}
+    # Label requis par kube-prometheus-stack pour découvrir les ServiceMonitors
+    release: worldcup
+spec:
+  selector:
+    matchLabels:
+      {{- include "worldcup.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: {{ .Values.monitoring.serviceMonitor.path }}
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scheme: http
+{{- end }}

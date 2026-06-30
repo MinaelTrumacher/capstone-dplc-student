@@ -1,0 +1,22 @@
+# Dépendances — reconstruites dans le container
+node_modules/
+
+# Données de test et outils de dev
+tests/
+jest.config.js
+
+# Fichiers Docker eux-mêmes (inutiles dans l'image)
+Dockerfile
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# Artefacts locaux
+*.log
+npm-debug.log*
+
+# Variables d'environnement locales
+.env
+.env.*
