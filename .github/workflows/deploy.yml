@@ -129,7 +129,7 @@ jobs:
           KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
         run: |
           mkdir -p ~/.kube
-          echo "$KUBECONFIG_DATA" > ~/.kube/config
+          echo "$KUBECONFIG_DATA" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
 
       - name: Helm dependency update
