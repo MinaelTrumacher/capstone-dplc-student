@@ -125,9 +125,11 @@ jobs:
           version: "3.15.0"
 
       - name: Configure kubectl
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d --ignore-garbage > ~/.kube/config
+          echo "$KUBECONFIG_DATA" > ~/.kube/config
           chmod 600 ~/.kube/config
 
       - name: Helm dependency update
